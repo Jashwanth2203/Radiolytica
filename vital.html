@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radiolytica.AI</title>
+    <style>
+        body, html {
+            background-image:url(https://wallpaperaccess.com/full/2107427.jpg);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px; /* Increased from 500px for a larger container */
+            margin: 0 auto;
+            padding: 3rem; /* Increased padding for more space */
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 3.5rem; /* Increased from 2.5rem for a bigger title */
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        p {
+            font-size: 1rem; /* Decreased from 1.1rem as requested */
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .upload-form {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2.5rem; /* Increased padding for more space */
+        }
+
+        .model-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem; /* Increased gap for more space between buttons */
+            margin-bottom: 2rem; /* Increased margin for more space */
+        }
+
+        .model-button {
+            flex: 1;
+            padding: 0.9rem 1.2rem; /* Increased padding for larger buttons */
+            font-size: 1.1rem; /* Increased font size */
+            border: none;
+            border-radius: 10px;
+            background-color: #3498db;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .model-button:hover {
+            background-color: #2980b9;
+            box-shadow: 0 0 20px rgba(52, 152, 219, 0.7); /* Increased glow effect */
+        }
+
+        .model-button.selected {
+            background-color: #2471a3; /* Different shade of blue for selected state */
+            box-shadow: 0 0 25px rgba(52, 152, 219, 1); /* Increased glow effect for selected state */
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .button-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem; /* Increased gap */
+            max-width: 350px; /* Increased from 300px */
+            margin: 0 auto;
+        }
+
+        .file-label, .submit-button {
+            display: inline-block;
+            width: 100%;
+            padding: 0.9rem 0; /* Increased padding */
+            font-size: 1.1rem; /* Increased font size */
+            background-color: #3498db;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            border: none;
+        }
+
+        .file-label:hover, .submit-button:hover {
+            background-color: #2980b9;
+        }
+
+        .submit-button:disabled {
+            background-color: rgba(255, 255, 255, 0.1);
+            cursor: not-allowed;
+        }
+
+        #file-name {
+            margin: 0.75rem 0; /* Increased margin */
+            font-style: italic;
+            min-height: 1.5em;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .preview-container {
+            width: 250px; /* Increased from 200px */
+            height: 250px; /* Increased from 200px */
+            margin: 1.5rem auto; /* Increased margin */
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: none;
+        }
+
+        #preview-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: rgba(0, 0, 0, 0.2);
+        }
+        .parkinsons-button {
+            display: inline-block;
+            width: 100%;
+            padding: 0.9rem 0;
+            font-size: 1.1rem;
+            background-color: #e74c3c;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            border: none;
+            margin-top: 1.5rem;
+            text-decoration: none;
+        }
+
+        .parkinsons-button:hover {
+            background-color: #c0392b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Radiolytica.ai</h1>
+        <p>Upload X-ray image for analysis</p>
+        <form action="/upload" method="post" enctype="multipart/form-data" class="upload-form">
+            <div id="file-name"></div>
+            <div class="preview-container">
+                <img id="preview-image" alt="Preview">
+            </div>
+            <div class="button-wrapper">
+                <input type="file" name="file" id="file-input" class="file-input" accept="image/*" required>
+                <label for="file-input" class="file-label">Choose File</label>
+                <button type="submit" class="submit-button" disabled>Upload Scan</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('file-input');
+        const fileName = document.getElementById('file-name');
+        const submitButton = document.querySelector('.submit-button');
+        const modelButtons = document.querySelectorAll('.model-button');
+        const selectedModelInput = document.getElementById('selected-model');
+        const previewContainer = document.querySelector('.preview-container');
+        const previewImage = document.getElementById('preview-image');
+
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+                fileName.textContent = file.name;
+                submitButton.disabled = false;
+                
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            } else {
+                fileName.textContent = '';
+                submitButton.disabled = true;
+                previewContainer.style.display = 'none';
+            }
+        });
+
+        modelButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                modelButtons.forEach(btn => btn.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedModelInput.value = this.dataset.model;
+            });
+        });
+
+        // Set default selected model
+        modelButtons[0].click();
+    </script>
+</body>
+</html>
